@@ -11,6 +11,8 @@ dependencies {
     compileOnly(bukkit)
 
     implementation("org.bstats:bstats-bukkit:3.0.0")
+    implementation("net.kyori:adventure-text-minimessage:4.17.0")
+    implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
 
     implementation(project(":API"))
     implementation(project(":PlatformBukkit"))
@@ -39,6 +41,7 @@ tasks {
         archiveClassifier.set("")
         archiveVersion.set("")
         relocate("org.bstats", "de.corneliusmay.silkspawners.plugin")
+        relocate("net.kyori", "de.corneliusmay.silkspawners.kyori")
         dependencies {
             exclude(dependency(bukkit))
         }
