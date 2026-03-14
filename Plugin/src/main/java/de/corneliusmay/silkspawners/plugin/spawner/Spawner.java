@@ -72,10 +72,23 @@ public class Spawner {
     }
 
     private ItemStack generateItemStack() {
+        String itemName = applyPlaceholders(new ConfigValue<String>(PluginConfig.SPAWNER_ITEM_NAME).get());
+        List<String> customLore = new ConfigValueArray<String>(PluginConfig.SPAWNER_ITEM_LORE).get()
+                .stream()
+                .map(this::applyPlaceholders)
+                .toList();
         return new ItemBuilder(this.plugin.getBukkitHandler().getSpawnerMaterial())
-                .setDisplayName(new ConfigValue<String>(PluginConfig.SPAWNER_ITEM_NAME).get())
+                .setDisplayName(itemName)
                 .addToLore(serializedName())
-                .addToLore(new ConfigValueArray<String>(PluginConfig.SPAWNER_ITEM_LORE).get()).build();
+                .addToLore(customLore).build();
+    }
+
+    private String applyPlaceholders(String text) {
+        String rawName = serializedEntityType();
+        String casedName = StringUtils.capitalizeFully(rawName.replace("_", " "));
+        return text
+                .replace("%spawner_name%", rawName)
+                .replace("%spawner_name_case%", casedName);
     }
 
     private EntityType getSpawnerEntity(String lore) {
