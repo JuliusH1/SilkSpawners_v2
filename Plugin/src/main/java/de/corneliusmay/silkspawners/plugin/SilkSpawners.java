@@ -89,6 +89,7 @@ public class SilkSpawners extends JavaPlugin {
 
     private void registerCommands() {
         SilkSpawnersCommandHandler commandHandler = new SilkSpawnersCommandHandler(this, "silkspawners");
+        commandHandler.addCommand(new ReloadCommand());
         commandHandler.addCommand(new GiveCommand());
         commandHandler.addCommand(new SetCommand());
         commandHandler.addCommand(new ExplosionCommand());
@@ -96,6 +97,29 @@ public class SilkSpawners extends JavaPlugin {
         commandHandler.addCommand(new LocaleCommand());
         commandHandler.addCommand(new EntitiesCommand());
         commandHandler.register();
+    }
+
+    public boolean reloadPluginState() {
+        new ConfigLoader(this).load();
+
+        // Refresh objects that cache values from config.
+        log = new Logger(new ConfigValue<String>(PluginConfig.MESSAGE_PREFIX).get());
+        locale = new LocaleHandler(this, new ConfigValue<Locale>(PluginConfig.MESSAGE_LOCALE).get());
+        if (locale.getResourceBundle() == null) {
+            return false;
+        }
+
+        if (versionChecker != null) {
+            versionChecker.stop();
+        }
+        versionChecker = new VersionChecker(this);
+        if (new ConfigValue<Boolean>(PluginConfig.UPDATE_CHECK_ENABLED).get()) {
+            versionChecker.start(new ConfigValue<Integer>(PluginConfig.UPDATE_CHECK_INTERVAL).get());
+        } else {
+            log.warn("Update checking is disabled");
+        }
+
+        return true;
     }
 
     @Override

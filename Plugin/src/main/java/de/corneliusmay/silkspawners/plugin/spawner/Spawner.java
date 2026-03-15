@@ -7,7 +7,7 @@ import de.corneliusmay.silkspawners.plugin.config.PluginConfig;
 import de.corneliusmay.silkspawners.plugin.utils.ItemBuilder;
 import de.corneliusmay.silkspawners.plugin.utils.StringUtils;
 import lombok.Getter;
-import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
@@ -15,6 +15,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Spawner {
     public static String EMPTY = "empty";
@@ -94,11 +95,27 @@ public class Spawner {
     private EntityType getSpawnerEntity(String lore) {
         String name;
         if(lore.startsWith(prefix)) {
-            name = lore.replaceFirst(prefix, "").replace(" ", "_").toLowerCase();
-        }else if(!oldPrefix.equals("") && lore.startsWith(oldPrefix)) {
-            name = lore.replaceFirst(oldPrefix, "").replace(" ", "_").toLowerCase();
+            name = lore.replaceFirst(Pattern.quote(prefix), "").replace(" ", "_").toLowerCase();
+        }else if(!oldPrefix.isEmpty() && lore.startsWith(oldPrefix)) {
+            name = lore.replaceFirst(Pattern.quote(oldPrefix), "").replace(" ", "_").toLowerCase();
         }else {
-            return null; // Invalid lore
+            // Fallback for dynamic prefix formats (e.g. %spawner_name_case%) where static prefix matching is impossible.
+            name = ChatColor.stripColor(lore).trim().replace(" ", "_").toLowerCase();
+            if (name.endsWith("_spawner")) {
+                name = name.substring(0, name.length() - "_spawner".length());
+            }
+            EntityType fallbackType = EntityType.fromName(name);
+            if (fallbackType != null) {
+                return fallbackType;
+            }
+
+            for (EntityType type : EntityType.values()) {
+                String entityName = type.getName();
+                if (entityName != null && name.contains(entityName.toLowerCase())) {
+                    return type;
+                }
+            }
+            return null;
         }
         if (name.equalsIgnoreCase(Spawner.EMPTY)) {
             return null;
@@ -111,6 +128,9 @@ public class Spawner {
     }
 
     public String serializedName() {
+        if (prefix.contains("%spawner_name%") || prefix.contains("%spawner_name_case%")) {
+            return applyPlaceholders(prefix);
+        }
         return prefix + StringUtils.capitalizeFully(serializedEntityType().replace("_", " "));
     }
 

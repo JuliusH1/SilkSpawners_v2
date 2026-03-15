@@ -1,3 +1,7 @@
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 group = "de.corneliusmay.silkspawners"
 
 plugins {
@@ -6,6 +10,16 @@ plugins {
 
 subprojects {
     apply(plugin = "java")
+
+    extensions.configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.release.set(17)
+    }
 
     repositories {
         mavenCentral()
