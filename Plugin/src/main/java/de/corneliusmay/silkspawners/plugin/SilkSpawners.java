@@ -69,6 +69,12 @@ public class SilkSpawners extends JavaPlugin {
         log.info("Starting bStats integration");
         new Metrics(this, 15215);
 
+        if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            log.info("PlaceholderAPI found - placeholder support enabled");
+        } else {
+            log.warn("PlaceholderAPI not found - placeholder support disabled");
+        }
+
         log.info("Registering listeners");
         registerListeners();
 

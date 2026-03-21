@@ -26,10 +26,29 @@ public class MessageConfigValue implements ConfigValueFormatter<String> {
             }
         }
 
+        // Convert &#RRGGBB hex format to §x§R§R§G§G§B§B before replacing & with §
+        formatted = convertHex(formatted);
+
         return formatted
                 .replaceAll("(?<!\\\\)[\\$&]", "§")
                 .replace("\\$", "$")
                 .replace("\\&", "&");
+    }
+
+    private String convertHex(String value) {
+        // Matches &#RRGGBB and converts to §x§R§R§G§G§B§B
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("&#([A-Fa-f0-9]{6})")
+                .matcher(value);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String hex = matcher.group(1);
+            StringBuilder replacement = new StringBuilder("§x");
+            for (char c : hex.toCharArray()) replacement.append('§').append(c);
+            matcher.appendReplacement(sb, replacement.toString());
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private boolean isMiniMessage(String value) {

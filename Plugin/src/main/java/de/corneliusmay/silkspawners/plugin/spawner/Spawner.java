@@ -12,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.regex.Pattern;
 
 public class Spawner {
     public static String EMPTY = "empty";
+
+    private static final ItemFlag TOOLTIP_HIDE_FLAG = resolveTooltipHideFlag();
 
     private final SilkSpawners plugin;
 
@@ -78,18 +81,29 @@ public class Spawner {
                 .stream()
                 .map(this::applyPlaceholders)
                 .toList();
-        return new ItemBuilder(this.plugin.getBukkitHandler().getSpawnerMaterial())
+        ItemBuilder builder = new ItemBuilder(this.plugin.getBukkitHandler().getSpawnerMaterial())
                 .setDisplayName(itemName)
-                .addToLore(serializedName())
-                .addToLore(customLore).build();
+                .addItemFlags(TOOLTIP_HIDE_FLAG);
+        if (!prefix.isEmpty()) {
+            builder.addToLore(serializedName());
+        }
+        return builder.addToLore(customLore).build();
     }
 
     private String applyPlaceholders(String text) {
         String rawName = serializedEntityType();
         String casedName = StringUtils.capitalizeFully(rawName.replace("_", " "));
-        return text
+        String result = text
                 .replace("%spawner_name%", rawName)
                 .replace("%spawner_name_case%", casedName);
+
+        // Resolve PAPI placeholders (e.g. Nexo's %nexo_shop_right_click%)
+        // null player = server-side/static placeholders only
+        if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(null, result);
+        }
+
+        return result;
     }
 
     private EntityType getSpawnerEntity(String lore) {
@@ -121,6 +135,14 @@ public class Spawner {
             return null;
         }
         return EntityType.fromName(name);
+    }
+
+    private static ItemFlag resolveTooltipHideFlag() {
+        try {
+            return ItemFlag.valueOf("HIDE_ADDITIONAL_TOOLTIP");
+        } catch (IllegalArgumentException ignored) {
+            return ItemFlag.HIDE_ATTRIBUTES;
+        }
     }
 
     public String serializedEntityType() {

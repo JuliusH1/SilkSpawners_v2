@@ -39,6 +39,11 @@ public class ItemBuilder {
         this.meta = this.stack.getItemMeta();
     }
 
+    public ItemBuilder addItemFlags(org.bukkit.inventory.ItemFlag... flags) {
+        this.meta.addItemFlags(flags);
+        return this;
+    }
+
     public ItemBuilder setDisplayName(String displayName) {
         this.meta.setDisplayName(displayName);
         return this;

@@ -17,7 +17,7 @@ public enum PluginConfig {
     SPAWNER_PICKAXE_REQUIRED(ConfigScope.SPAWNER, "pickaxeRequired", true, new BooleanConfigValue()),
     SPAWNER_SILKTOUCH_REQUIRED(ConfigScope.SPAWNER, "silktouchRequired", true, new BooleanConfigValue()),
     SPAWNER_ITEM_NAME(ConfigScope.SPAWNER_ITEM, "name", "$d%spawner_name_case% Spawner", new MessageConfigValue()),
-    SPAWNER_ITEM_PREFIX(ConfigScope.SPAWNER_ITEM, "prefix", "$e", value -> value.isEmpty() ? "§f" : new MessageConfigValue().format(value)),
+    SPAWNER_ITEM_PREFIX(ConfigScope.SPAWNER_ITEM, "prefix", "$e", new MessageConfigValue()),
     SPAWNER_ITEM_PREFIX_OLD(ConfigScope.SPAWNER_ITEM, "prefixOld", "", new MessageConfigValue(), new String[]{ConfigScope.SPAWNER_ITEM.getPath() + "prefix-old"}),
     SPAWNER_ITEM_LORE(ConfigScope.SPAWNER_ITEM, "lore", new Object[]{new String[0]}, new MessageConfigValue()),
     SPAWNER_EXPLOSION_NORMAL(ConfigScope.SPAWNER_EXPLOSION, "normal", 0, new IntegerConfigValue()),

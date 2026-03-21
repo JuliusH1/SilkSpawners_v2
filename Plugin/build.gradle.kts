@@ -13,6 +13,7 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:3.0.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation(project(":API"))
     implementation(project(":PlatformBukkit"))
