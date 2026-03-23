@@ -7,6 +7,9 @@ import de.corneliusmay.silkspawners.plugin.config.PluginConfig;
 import de.corneliusmay.silkspawners.plugin.utils.ItemBuilder;
 import de.corneliusmay.silkspawners.plugin.utils.StringUtils;
 import lombok.Getter;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -21,6 +24,7 @@ import java.util.regex.Pattern;
 public class Spawner {
     public static String EMPTY = "empty";
 
+    private static final String PDC_ENTITY_KEY = "spawner_entity_type";
     private static final ItemFlag TOOLTIP_HIDE_FLAG = resolveTooltipHideFlag();
 
     private final SilkSpawners plugin;
@@ -49,8 +53,18 @@ public class Spawner {
         this.itemStack = itemStack;
         if(itemStack == null) return;
         if(itemStack.getType() != this.plugin.getBukkitHandler().getSpawnerMaterial()) return;
-        if(itemStack.getItemMeta() == null || itemStack.getItemMeta().getLore() == null) return;
+        if(itemStack.getItemMeta() == null) return;
 
+        PersistentDataContainer pdc = itemStack.getItemMeta().getPersistentDataContainer();
+        NamespacedKey key = new NamespacedKey(plugin, PDC_ENTITY_KEY);
+        if (pdc.has(key, PersistentDataType.STRING)) {
+            String stored = pdc.get(key, PersistentDataType.STRING);
+            this.entityType = stored.equalsIgnoreCase(Spawner.EMPTY) ? null : EntityType.fromName(stored);
+            return;
+        }
+
+        // Fallback
+        if (itemStack.getItemMeta().getLore() == null) return;
         this.entityType = getSpawnerEntity(itemStack.getItemMeta().getLore().get(0));
     }
 
@@ -80,14 +94,33 @@ public class Spawner {
         List<String> customLore = new ConfigValueArray<String>(PluginConfig.SPAWNER_ITEM_LORE).get()
                 .stream()
                 .map(this::applyPlaceholders)
+                .map(line -> line.startsWith("§r") ? line : "§r" + line)
                 .toList();
         ItemBuilder builder = new ItemBuilder(this.plugin.getBukkitHandler().getSpawnerMaterial())
                 .setDisplayName(itemName)
                 .addItemFlags(TOOLTIP_HIDE_FLAG);
         if (!prefix.isEmpty()) {
-            builder.addToLore(serializedName());
+            builder.addToLore("§r" + serializedName());
         }
-        return builder.addToLore(customLore).build();
+        ItemStack item = builder.addToLore(customLore).build();
+
+        // Write entity type to PDC so placement/detection never relies on lore
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        meta.getPersistentDataContainer().set(
+                new NamespacedKey(plugin, PDC_ENTITY_KEY),
+                PersistentDataType.STRING,
+                serializedEntityType()
+        );
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static ItemFlag resolveTooltipHideFlag() {
+        try {
+            return ItemFlag.valueOf("HIDE_ADDITIONAL_TOOLTIP");
+        } catch (IllegalArgumentException ignored) {
+            return ItemFlag.HIDE_ATTRIBUTES;
+        }
     }
 
     private String applyPlaceholders(String text) {
@@ -97,7 +130,7 @@ public class Spawner {
                 .replace("%spawner_name%", rawName)
                 .replace("%spawner_name_case%", casedName);
 
-        // Resolve PAPI placeholders (e.g. Nexo's %nexo_shop_right_click%)
+        // Resolve PAPI placeholders
         // null player = server-side/static placeholders only
         if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(null, result);
@@ -108,7 +141,7 @@ public class Spawner {
 
     private EntityType getSpawnerEntity(String lore) {
         String name;
-        if(lore.startsWith(prefix)) {
+        if(!prefix.isEmpty() && lore.startsWith(prefix)) {
             name = lore.replaceFirst(Pattern.quote(prefix), "").replace(" ", "_").toLowerCase();
         }else if(!oldPrefix.isEmpty() && lore.startsWith(oldPrefix)) {
             name = lore.replaceFirst(Pattern.quote(oldPrefix), "").replace(" ", "_").toLowerCase();
@@ -135,14 +168,6 @@ public class Spawner {
             return null;
         }
         return EntityType.fromName(name);
-    }
-
-    private static ItemFlag resolveTooltipHideFlag() {
-        try {
-            return ItemFlag.valueOf("HIDE_ADDITIONAL_TOOLTIP");
-        } catch (IllegalArgumentException ignored) {
-            return ItemFlag.HIDE_ATTRIBUTES;
-        }
     }
 
     public String serializedEntityType() {

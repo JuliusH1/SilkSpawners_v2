@@ -8,8 +8,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 public class MessageConfigValue implements ConfigValueFormatter<String> {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private static final LegacyComponentSerializer LEGACY_SERIALIZER =
-            LegacyComponentSerializer.legacySection();
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
     @Override
     public String format(String value) {

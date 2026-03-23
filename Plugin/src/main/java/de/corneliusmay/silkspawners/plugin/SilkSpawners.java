@@ -106,6 +106,7 @@ public class SilkSpawners extends JavaPlugin {
     }
 
     public boolean reloadPluginState() {
+        reloadConfig(); // Re-read config.yml from disk before processing
         new ConfigLoader(this).load();
 
         // Refresh objects that cache values from config.
