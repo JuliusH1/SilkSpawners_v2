@@ -20,6 +20,8 @@ public enum PluginConfig {
     SPAWNER_ITEM_PREFIX(ConfigScope.SPAWNER_ITEM, "prefix", "$e", new MessageConfigValue()),
     SPAWNER_ITEM_PREFIX_OLD(ConfigScope.SPAWNER_ITEM, "prefixOld", "", new MessageConfigValue(), new String[]{ConfigScope.SPAWNER_ITEM.getPath() + "prefix-old"}),
     SPAWNER_ITEM_LORE(ConfigScope.SPAWNER_ITEM, "lore", new Object[]{new String[0]}, new MessageConfigValue()),
+    SPAWNER_EGG_ENABLED(ConfigScope.SPAWNER_EGG, "enabled", true, new BooleanConfigValue()),
+    SPAWNER_EGG_CONSUME(ConfigScope.SPAWNER_EGG, "consumeEgg", true, new BooleanConfigValue()),
     SPAWNER_EXPLOSION_NORMAL(ConfigScope.SPAWNER_EXPLOSION, "normal", 0, new IntegerConfigValue()),
     SPAWNER_EXPLOSION_SILKTOUCH(ConfigScope.SPAWNER_EXPLOSION, "silktouch", 0, new IntegerConfigValue()),
     SPAWNER_MESSAGE_DENY_DESTROY(ConfigScope.SPAWNER_MESSAGES, "denyDestroy", true, new BooleanConfigValue()),

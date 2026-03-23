@@ -81,10 +81,12 @@ public class LocaleHandler {
     }
 
     public String getMessage(String key, Object... args) {
+        String prefix = getPrefix();
+        String separator = prefix.isEmpty() ? "" : "§f ";
         try {
-            return getPrefix() + "§f " + getMessageClean(key, args);
+            return prefix + separator + getMessageClean(key, args);
         } catch (MissingResourceException ex) {
-            return getPrefix() + "§f " +  MessageFormat.format(DEFAULT_MESSAGE, key, locale.toString());
+            return prefix + separator + MessageFormat.format(DEFAULT_MESSAGE, key, locale.toString());
         }
     }
 

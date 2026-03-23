@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -23,29 +24,54 @@ public class PlayerInteractListener extends SilkSpawnersListener<PlayerInteractE
 
     @Override @EventHandler(priority = EventPriority.HIGHEST)
     protected void onCall(PlayerInteractEvent e) {
-        if(e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block block = e.getClickedBlock();
 
         Location blockLocation = block.getLocation();
         Spawner spawner = new Spawner(plugin, block);
-        if(!spawner.isValid()) return;
+        if (!spawner.isValid()) return;
 
-        if(editedSpawners.stream().anyMatch(b -> b.getLocation().equals(blockLocation))) {
+        ItemStack heldItem = e.getItem();
+        boolean isSpawnEgg = heldItem != null && heldItem.getType().name().endsWith("_SPAWN_EGG");
+
+        if (isSpawnEgg) {
+            boolean eggEnabled = new ConfigValue<Boolean>(PluginConfig.SPAWNER_EGG_ENABLED).get();
+            if (!eggEnabled) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+
+        if (editedSpawners.stream().anyMatch(b -> b.getLocation().equals(blockLocation))) {
             e.setCancelled(true);
             return;
         }
         editedSpawners.add(block);
 
+        final ItemStack eggSnapshot = isSpawnEgg ? heldItem.clone() : null;
+        final int eggSlot = isSpawnEgg ? e.getPlayer().getInventory().getHeldItemSlot() : -1;
+
         this.plugin.getPlatform().runTaskLater(blockLocation, () -> {
             Spawner newSpawner = new Spawner(plugin, block.getWorld().getBlockAt(blockLocation));
 
-            if(!e.getPlayer().hasPermission("silkspawners.change." + newSpawner.serializedEntityType())
-                    && !e.getPlayer().hasPermission("silkspawners.change.*")
-                    && !new ConfigValue<Boolean>(PluginConfig.SPAWNER_PERMISSION_DISABLE_CHANGE).get()
-                    && spawner.getEntityType() != newSpawner.getEntityType()) {
+            boolean permissionDenied =
+                    !e.getPlayer().hasPermission("silkspawners.change." + newSpawner.serializedEntityType())
+                            && !e.getPlayer().hasPermission("silkspawners.change.*")
+                            && !new ConfigValue<Boolean>(PluginConfig.SPAWNER_PERMISSION_DISABLE_CHANGE).get()
+                            && spawner.getEntityType() != newSpawner.getEntityType();
+
+            if (permissionDenied) {
                 spawner.setSpawnerBlockType(block, this.editedSpawners);
-                if(new ConfigValue<Boolean>(PluginConfig.SPAWNER_MESSAGE_DENY_CHANGE).get()) e.getPlayer().sendMessage(plugin.getLocale().getMessage("SPAWNER_CHANGE_DENIED"));
+                if (new ConfigValue<Boolean>(PluginConfig.SPAWNER_MESSAGE_DENY_CHANGE).get()) {
+                    e.getPlayer().sendMessage(plugin.getLocale().getMessage("SPAWNER_CHANGE_DENIED"));
+                }
+                if (eggSnapshot != null) {
+                    e.getPlayer().getInventory().setItem(eggSlot, eggSnapshot);
+                }
             } else {
+                if (eggSnapshot != null && !new ConfigValue<Boolean>(PluginConfig.SPAWNER_EGG_CONSUME).get()) {
+                    e.getPlayer().getInventory().setItem(eggSlot, eggSnapshot);
+                }
                 editedSpawners.remove(block);
             }
         }, 1);

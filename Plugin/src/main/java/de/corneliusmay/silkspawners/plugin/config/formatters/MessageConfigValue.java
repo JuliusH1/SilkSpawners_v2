@@ -12,7 +12,7 @@ public class MessageConfigValue implements ConfigValueFormatter<String> {
 
     @Override
     public String format(String value) {
-        if (value == null) {
+        if (value == null || value.isEmpty() || value.equalsIgnoreCase("NONE")) {
             return "";
         }
 
@@ -25,7 +25,6 @@ public class MessageConfigValue implements ConfigValueFormatter<String> {
             }
         }
 
-        // Convert &#RRGGBB hex format to §x§R§R§G§G§B§B before replacing & with §
         formatted = convertHex(formatted);
 
         return formatted
@@ -35,7 +34,6 @@ public class MessageConfigValue implements ConfigValueFormatter<String> {
     }
 
     private String convertHex(String value) {
-        // Matches &#RRGGBB and converts to §x§R§R§G§G§B§B
         java.util.regex.Matcher matcher = java.util.regex.Pattern
                 .compile("&#([A-Fa-f0-9]{6})")
                 .matcher(value);

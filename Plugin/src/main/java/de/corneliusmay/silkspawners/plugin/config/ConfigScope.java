@@ -4,6 +4,7 @@ public enum ConfigScope {
     MESSAGES("messages"),
     SPAWNER("spawner"),
     SPAWNER_ITEM("item", SPAWNER),
+    SPAWNER_EGG("spawnEgg", SPAWNER),
     SPAWNER_EXPLOSION("explosion", SPAWNER),
     SPAWNER_MESSAGES("message", SPAWNER),
     SPAWNER_PERMISSIONS("permission", SPAWNER),
